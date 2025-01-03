@@ -77,3 +77,11 @@ pip3 install --upgrade google-cloud-speech
 
 https://www.techbeamers.com/python-tutorial-write-tcp-server/
 https://stackoverflow.com/questions/26768213/python-sockets-sending-a-packet-to-a-server-and-waiting-for-a-response
+
+
+if AI is in use, get an OPENAI API key and add it in basictalk.py. If no AI is used, just comment out 
+
+"command = checkgpt(command)"
+
+by adding a # in front of it
+

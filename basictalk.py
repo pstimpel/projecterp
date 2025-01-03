@@ -7,6 +7,8 @@ import json
 import pygame
 import os
 import syslogger
+import requests
+import json
 
 myleds = leds.Leds()
 mymail = mail.Mail()
@@ -17,6 +19,68 @@ host_ip, server_port_listen, server_port_talk = "127.0.0.1", 50002, 50001
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(13, GPIO.IN)
+
+
+openai_apikey="YOUR OPENAI API KEY"
+
+def checkgpt(command):
+
+        commandplain = '''Prüfe folgenden Eingabe in folgender Reihenfolge.
+
+        Prüfe zuerst ob die Eingabe nur eine Zahl darstellen soll. Erlaubt sind INT oder FLOAT.
+        Wenn eine Umwandlung möglich ist, gib die erkannte Zahl aus und beende die Abarbeitung dieses Befehls.
+
+        Wenn keine Umwandlung möglich ist, prüfe die Eingabe nach folgenden weiteren Regeln.
+
+        Prüfe auf Rechtschreibprüfung, nicht Grammatik. Prüfe den Satz dabei mit einem elektronischen bzw. elektrotechnischen Hintergrund.
+
+        Wenn die Rechtschreibung falsch ist, korrigiere diese. Wenn die Eingabe in Ordnung ist, nimm die Eingabe für die weitere Verarbeitung.
+
+        Wenn du Zahlen im Textformat findest, ersetze diese in der Ausgabe ebenfalls mit dem entsprechenden Zahlenwert.
+        Dabei kannst du Phrasen wie ein Viertel in die Zahl umwandeln. z.B. 0,25.
+
+        Gib keine Anmerkungen aus. Die Eingabe: '''
+
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + openai_apikey,
+        }
+
+        json_data = {
+            'model': 'gpt-4o-mini',
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': '' + commandplain + " " + command,
+                },
+            ],
+        }
+
+        response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=json_data)
+
+        # Note: json_data will not be serialized by requests
+        # exactly as it was in the original request.
+        #data = '{\n        "model": "gpt-4o-mini",\n        "messages": [\n            {\n                "role": "user",\n                "content": "mytext"\n       $        #response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, data=data)
+
+        if response.status_code == 200:
+            response_data = response.json()
+            #print(json.dumps(response_data, indent=2))  # Inspect the full response
+
+            # Access specific parts of the response
+            choices = response_data.get("choices", [])
+            if choices:
+                generated_text = choices[0].get("message", {}).get("content", "")
+                log.log("got " + command + ", and got back " + generated_text, 'basictalk.checkgpt')
+                return generated_text
+            else:
+                log.log("got " + command + ", but now answer", 'basictalk.checkgpt')
+                return command
+        else:
+            #print(f"Error: {response.status_code}")
+            #print(response.text)  # Additional error information
+            log.log("got error " + response.text, 'basictalk.checkgpt')
+            return command
 
 
 def listen():
@@ -129,6 +193,8 @@ while True:
         try:
             command = listen().replace("\r","").replace("\n","")
 
+            command = checkgpt(command)
+
             if command[0:8]=="bestelle":
                 print("should write mail with subject bestelle:")
                 mymail.send("zu bestellen", command)
@@ -153,8 +219,8 @@ while True:
             print(jsondata)
             
             newHeaders = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-            # TODO: change API HOST
-            response = requests.post(url="http://APIHOST/storagelocation/talk.php",
+
+            response = requests.post(url="http://192.168.0.6:81/storagelocation/talk.php",
                                     data=jsondata,
                                     headers=newHeaders)
 

@@ -44,6 +44,12 @@ Sometimes, Google struggles with certain translations, especially technical term
 
 The web interface uses the same API, so you can do the same things via the web interface as you can with voice commands. This was useful for debugging.
 
+# Using AI
+
+Based on a chat with Andreas Spiess I was adding some AI to the game. Please see setup.md and basictalk.py for more details. You could change the basic prompt as well to talk in your language, or to have more specific results.
+
+But we did it, we made the solution SUPERSMART by adding hyped AI to it. Hyper hyper ...
+
 # How to proceed
 
 **DO NOT USE THIS CODE FOR ANYTHING OTHER THAN INSPIRATION**
