@@ -7,7 +7,6 @@ import json
 import pygame
 import os
 import syslogger
-import requests
 import json
 
 myleds = leds.Leds()
@@ -39,7 +38,9 @@ def checkgpt(command):
         Wenn du Zahlen im Textformat findest, ersetze diese in der Ausgabe ebenfalls mit dem entsprechenden Zahlenwert.
         Dabei kannst du Phrasen wie ein Viertel in die Zahl umwandeln. z.B. 0,25.
 
-        Gib keine Anmerkungen aus. Die Eingabe: '''
+        Gib keine Anmerkungen aus. Gib auch das Wort Ausgabe nicht aus. Wenn du nichts veränderst, gib die Eingabe aus ohne weitere Anmerkungen.
+                                                                                                                                                                                 
+        Die Eingabe:  '''
 
 
         headers = {
@@ -195,13 +196,24 @@ while True:
 
             command = checkgpt(command)
 
-            if command[0:8]=="bestelle":
+            if command[0:8].lower()=="bestelle":
                 print("should write mail with subject bestelle:")
                 mymail.send("zu bestellen", command)
+                # mach nen einfachen Request und schreibe den Bestelltext ins Backlog
+
+                jsondata['action']=command[8:]
+                jsondata = json.dumps(jsondata, indent=2)
+                print(jsondata)
+            
+                newHeaders = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+
+                response = requests.post(url="http://192.168.0.6:81/storagelocation/talk.php",
+                                    data=jsondata,
+                                    headers=newHeaders)
                 enterloop=False
                 break
 
-            if command[0:5]=="Notiz":
+            if command[0:5].lower()=="notiz":
                 print("should write mail with subject Notiz:")
                 mymail.send("Notiz", command)
                 enterloop=False

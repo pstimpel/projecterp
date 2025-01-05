@@ -82,6 +82,26 @@ CREATE SEQUENCE public.storagelocation_id_seq
 
 ALTER SEQUENCE public.storagelocation_id_seq OWNED BY public.storagelocation.id;
 
+
+CREATE TABLE public.orderbacklog (
+    id integer NOT NULL,
+    name text NOT NULL,
+    ts timestamp without time zone NOT NULL,
+	tobedone integer not null
+);
+
+CREATE SEQUENCE public.orderbacklog_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.orderbacklog_id_seq OWNED BY public.orderbacklog.id;
+
+
+
 ALTER TABLE ONLY public.fuzzer ALTER COLUMN fuzz_id SET DEFAULT nextval('public.fuzzer_fuzz_id_seq'::regclass);
 
 ALTER TABLE ONLY public.product ALTER COLUMN product_id SET DEFAULT nextval('public.product_product_id_seq'::regclass);
@@ -91,6 +111,8 @@ ALTER TABLE ONLY public.stock ALTER COLUMN stock_id SET DEFAULT nextval('public.
 ALTER TABLE ONLY public.storage ALTER COLUMN storage_id SET DEFAULT nextval('public.storage_storage_id_seq'::regclass);
 
 ALTER TABLE ONLY public.storagelocation ALTER COLUMN id SET DEFAULT nextval('public.storagelocation_id_seq'::regclass);
+
+ALTER TABLE ONLY public.orderbacklog ALTER COLUMN id SET DEFAULT nextval('public.orderbacklog_id_seq'::regclass);
 
 ALTER TABLE ONLY public.fuzzer
     ADD CONSTRAINT fuzzer_pkey PRIMARY KEY (fuzz_id);
@@ -106,3 +128,6 @@ ALTER TABLE ONLY public.storage
 
 ALTER TABLE ONLY public.storagelocation
     ADD CONSTRAINT storagelocation_pkey PRIMARY KEY (id);
+	
+ALTER TABLE ONLY public.orderbacklog
+    ADD CONSTRAINT orderbacklog_pkey PRIMARY KEY (id);
