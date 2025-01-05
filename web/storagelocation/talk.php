@@ -24,10 +24,12 @@ $db = $database->getConnection();
 $json = json_decode(file_get_contents('php://input'), true);
 $processed=false;
 
+//todo: refactor this whole thing, remove spaqghetties
+
 if( !isset($json['workflow']) && isset($json['action']) &&
         (
-            substr(strtolower($json['action']),0,5) == "finde" ||
-            substr(strtolower($json['action']),0,5) == "suche"
+            substr(strtolower($json['action']),0,strlen("finde")) == "finde" ||
+            substr(strtolower($json['action']),0,strlen("suche")) == "suche"
         )
     ) {
 
@@ -45,7 +47,7 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
-        substr(strtolower($json['action']),0,6) == "detail"
+        substr(strtolower($json['action']),0,strlen("detail")) == "detail"
     )
 ) {
 
@@ -63,7 +65,7 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
-        substr(strtolower($json['action']),0,5) == "hilfe"
+        substr(strtolower($json['action']),0,strlen("hilfe")) == "hilfe"
     )
 ) {
 
@@ -81,7 +83,7 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
-        substr(strtolower($json['action']),0,8) == "bestelle"
+        substr(strtolower($json['action']),0,strlen("bestelle")) == "bestelle"
     )
 ) {
 
@@ -99,7 +101,7 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
-        substr(strtolower($json['action']),0,12) == "bestellungen"
+        substr(strtolower($json['action']),0,strlen("bestellungen")) == "bestellungen"
     )
 ) {
 
@@ -135,7 +137,7 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
-        substr(strtolower($json['action']),0,5) == "liste"
+        substr(strtolower($json['action']),0,strlen("liste")) == "liste"
     )
 ) {
 
@@ -151,11 +153,13 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 }
 
+
+//todo: do we need to check against odd words since we use AI to complete the commands?
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
-        substr(strtolower($json['action']),0,9) == "einlagern" ||
-        substr(strtolower($json['action']),0,9) == "einladung" ||
-        substr(strtolower($json['action']),0,7) == "einlage"
+        substr(strtolower($json['action']),0,strlen("einlagern")) == "einlagern" ||
+        substr(strtolower($json['action']),0,strlen("einladung")) == "einladung" ||
+        substr(strtolower($json['action']),0,strlen("einlage")) == "einlage"
     )
 ) {
 
