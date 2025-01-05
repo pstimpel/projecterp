@@ -13,6 +13,7 @@ include_once '../objects/stock.php';
 include_once '../objects/product.php';
 include_once '../objects/mailer.php';
 include_once '../objects/storage.php';
+include_once '../objects/orderbacklog.php';
 
 // instantiate database and product object
 $database = new Database();
@@ -80,6 +81,60 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 
 if( !isset($json['workflow']) && isset($json['action']) &&
     (
+        substr(strtolower($json['action']),0,8) == "bestelle"
+    )
+) {
+
+    //move action to queryaction
+    $json['queryaction']=$json['action'];
+    unset($json['action']);
+
+    //set workflow
+    $json['workflow'] = 'order';
+    $json['workflowstep'] = 1;
+
+    $processed=true;
+
+}
+
+if( !isset($json['workflow']) && isset($json['action']) &&
+    (
+        substr(strtolower($json['action']),0,12) == "bestellungen"
+    )
+) {
+
+    //move action to queryaction
+    $json['queryaction']=$json['action'];
+    unset($json['action']);
+
+    //set workflow
+    $json['workflow'] = 'listorders';
+    $json['workflowstep'] = 1;
+
+    $processed=true;
+
+}
+
+if( !isset($json['workflow']) && isset($json['action']) &&
+    (
+        substr(strtolower($json['action']),0,strlen("lösche bestellung")) == "lösche bestellung"
+    )
+) {
+
+    //move action to queryaction
+    $json['queryaction']=$json['action'];
+    unset($json['action']);
+
+    //set workflow
+    $json['workflow'] = 'deleteorder';
+    $json['workflowstep'] = 1;
+
+    $processed=true;
+
+}
+
+if( !isset($json['workflow']) && isset($json['action']) &&
+    (
         substr(strtolower($json['action']),0,5) == "liste"
     )
 ) {
@@ -119,12 +174,72 @@ if( !isset($json['workflow']) && isset($json['action']) &&
 if( isset($json['workflow']) && $json['workflow'] == 'help') {
     switch($json['workflowstep']) {
         case 1:
-            $json['talk'] = "Mögliche Befehle: liste Lagername, suche Artikelname, detail Artikelname für Suche nach Produktnamenteilen, einlagern Artikelname, Notiz Text, Bestelle Text";
+            $json['talk'] = "Mögliche Befehle: liste Lagername, suche Artikelname, detail Artikelname für Suche nach Produktnamenteilen, einlagern Artikelname, Notiz Text, Bestelle Text, Bestellungen, Lösche Bestellung";
             $json['nextaction'] = 'exit';
             $json['followupworkflowstep'] = 99;
             break;
     }
 }
+
+if ( isset($json['workflow']) && $json['workflow'] == 'deleteorder') {
+    switch($json['workflowstep']) {
+        case 1:
+            //Finde die Bestellnummer im String
+            $ordernumber_s = substr($json['queryaction'], strlen("lösche bestellung")+1);
+
+            if(strlen($ordernumber_s)==0) {
+                $json['talk'] = "Keine Bestellungnummer verstanden";
+                $json['nextaction'] = 'exit';
+                $json['followupworkflowstep'] = 99;
+            } else {
+                if(is_numeric($ordernumber_s)) {
+                    $ordernumber = (int)$ordernumber_s;
+                    $orderbacklog = new OrderBacklog($db);
+                    $orderbacklog->id = $ordernumber;
+                    if($orderbacklog->markOrderById()) {
+                        $json['talk'] = "OK";
+                    } else {
+                        $json['talk'] = "Order ".$ordernumber_s." nicht gefunden";
+                    }
+                    $json['nextaction'] = 'exit';
+                    $json['followupworkflowstep'] = 99;
+                } else {
+                    $json['talk'] = "Falsche bestellnummer verstanden, Eingabe war ".$ordernumber_s;
+                    $json['nextaction'] = 'exit';
+                    $json['followupworkflowstep'] = 99;
+                }
+            }
+
+    }
+}
+
+if ( isset($json['workflow']) && $json['workflow'] == 'listorders') {
+    switch($json['workflowstep']) {
+        case 1:
+            $orderbacklog = new OrderBacklog($db);
+            $orders = $orderbacklog->readAll();
+            $json['talk'] = $orders;
+            $json['nextaction'] = 'exit';
+            $json['followupworkflowstep'] = 99;
+            break;
+    }
+}
+
+if( isset($json['workflow']) && $json['workflow'] == 'order') {
+
+    //schreibe die order ins Backlog
+    $ordertext = str_replace("Bestelle ", '', $json['queryaction']);
+    $ordertext = str_replace("bestelle ", '', $ordertext);
+
+    $orderbacklog = new OrderBacklog($db);
+    $orderbacklog->ts=date("Y-m-d H:i:s");
+    $orderbacklog->name=$ordertext;
+    $orderbacklog->tobedone=1;
+    $orderbacklog->addStorage();
+    $processed=true;
+
+}
+
 
 if( isset($json['workflow']) && $json['workflow'] == 'list') {
     switch($json['workflowstep']) {
@@ -342,7 +457,7 @@ if(!$processed) {
     if(!$json['action']) {
         $json['action']='unbekannt';
     }
-    $json = array("talk" => "Kein Kommando erkannt, Eigabe war ".$json['action'], "nextaction" => 'exit', "host"=>$_SERVER['REMOTE_ADDR'], "data" => $json);
+    $json = array("talk" => "Kein Kommando erkannt, Eingabe war ".$json['action'], "nextaction" => 'exit', "host"=>$_SERVER['REMOTE_ADDR'], "data" => $json);
     //$mail = new Mail(print_r($json, true));
     //$mail->sendmail();
 
